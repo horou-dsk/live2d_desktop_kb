@@ -1,0 +1,30 @@
+{
+  "name": "dango",
+  "version": "1.0.0",
+  "description": "A minimal Electron application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --dev",
+    "dist": "electron-builder"
+  },
+  "repository": "https://github.com/electron/electron-quick-start",
+  "keywords": [
+    "Electron",
+    "quick",
+    "start",
+    "tutorial",
+    "demo"
+  ],
+  "author": "GitHub",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^7.0.1",
+    "electron-builder": "^22.1.0"
+  },
+  "build": {
+    "appId": "cqc.fuck",
+    "icon": "ico/dango.ico",
+    "productName": "団子",
+    "extraResources": "./live2d_models"
+  }
+}
