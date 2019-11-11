@@ -10,12 +10,28 @@
       padding: 0;
       overflow: hidden;
     }
+    *{
+      box-sizing: border-box;
+    }
     .live2d{
-      -webkit-app-region: drag
+      -webkit-app-region: drag;
+    }
+    .live2dnd {
+      -webkit-app-region: no-drag;
+    }
+    #resize_box {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 2px solid red;
+      display: none;
     }
   </style>
   <body>
-    <canvas class="live2d" id="live2d" width="240" height="360"></canvas>
+    <canvas class="live2d" id="live2d"></canvas>
+    <div id="resize_box"></div>
     <script src="./live2d.js"></script>
     <script src="./renderer.js"></script>
   </body>

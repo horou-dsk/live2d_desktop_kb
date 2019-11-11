@@ -1,42 +1,74 @@
 // Modules to control application life and create native browser window
 const {app, BrowserWindow, screen, Tray, Menu} = require('electron')
 const path = require('path')
+const fs = require('fs')
+const __DEV__ = require('./openv')
+let config = require('./config')
+const configPath = './config.json'
+
+
+function resolvePath(path) {
+  return __DEV__ ? path : '.' + path
+}
+
+function live2dModels(dir) {
+  const list = []
+  const t = (p) => {
+    const dirList = fs.readdirSync(path.join(__dirname, p))
+    dirList.forEach(value => {
+      const rpath = p + '/' + value
+      const abspath = path.join(__dirname, p, value)
+      const stat = fs.statSync(abspath)
+      if(stat.isFile() && /model\.json/.test(abspath)) {
+        list.push(rpath)
+      } else if (stat.isDirectory()) {
+        t(rpath)
+      }
+    })
+  }
+  t(dir)
+  return list
+}
+
+function asyncConfig() {
+  if(__DEV__) return
+  fs.writeFileSync(configPath, JSON.stringify(config))
+}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 let tray
+
 function createWindow () {
   // Create the browser window.
+  if(!__DEV__ && fs.existsSync(configPath)) {
+    config = JSON.parse(fs.readFileSync(configPath).toString())
+  }
+  // config = new Proxy(config, {set: () => asyncConfig()})
+
   mainWindow = new BrowserWindow({
-    // width: 240,
-    // height: 360,
+    width: config.screenWidth,
+    height: config.screenHeight,
+    x: config.screenX,
+    y: config.screenY,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     },
     icon: path.join(__dirname, 'ico/dango.ico'),
     frame: false,
+    resizable: false,
     transparent: true,
-    useContentSize: true,
-    skipTaskbar: true
+    // useContentSize: true,
+    skipTaskbar: true,
+    alwaysOnTop: config.alwaysOnTop
     // fullscreen: true
   })
 
-  // mainWindow.setIgnoreMouseEvents(true)
+  mainWindow.setIgnoreMouseEvents(config.ignoreMouse)
 
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
-
-  /*setInterval(() => {
-    console.log(mainWindow.getPosition())
-    console.log(mainWindow.getSize())
-  }, 2000)*/
-
-  mainWindow.webContents.openDevTools()
-  /*setInterval(() => {
-    let mousePos = screen.getCursorScreenPoint();
-    console.log(mousePos);
-  }, 5000)*/
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
@@ -47,24 +79,55 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
+    asyncConfig()
   })
 
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('changeModel', config.model ? config.model : resolvePath('./live2d_models/live2d-widget-model-tsumiki/assets/tsumiki.model.json'))
+  })
+
+  mainWindow.on('move', () => {
+    const [x, y] = mainWindow.getPosition()
+    config.screenX = x
+    config.screenY = y
+  })
+
+  mainWindow.on('resize', () => {
+    const [width, height] = mainWindow.getSize()
+    config.screenWidth = width
+    config.screenHeight = height
+  })
+
+  const list = live2dModels(__DEV__ ? './live2d_models' : '../live2d_models')
   tray = new Tray(path.join(__dirname, 'ico/dango.ico'))
-  tray.setToolTip('团子')
-  let onTopFlag = false, ignoreMouseEvent = false
+  tray.setToolTip('団子')
+  let onTopFlag = config.alwaysOnTop, ignoreMouseEvent = config.ignoreMouse, resizable = false
   function setContextMenu() {
     tray.setContextMenu(Menu.buildFromTemplate([
       {label: onTopFlag ? '取消置顶' : '置顶显示', click: () => {
           mainWindow.setAlwaysOnTop(!onTopFlag)
           onTopFlag = !onTopFlag
+          config.alwaysOnTop = onTopFlag
           setContextMenu()
         }},
       {label: ignoreMouseEvent ? '取消穿透' : '鼠标穿透', click: () => {
           ignoreMouseEvent = !ignoreMouseEvent
           mainWindow.setIgnoreMouseEvents(ignoreMouseEvent)
+          config.ignoreMouse = ignoreMouseEvent
           setContextMenu()
         }},
-      {label: '退出', click: () => app.quit()}
+      {label: !resizable ? '调整窗口大小' : '关闭调整', click: () => {
+          mainWindow.webContents.send('resizable', mainWindow.resizable = resizable = !resizable)
+          setContextMenu()
+        }},
+      {label: '模型列表', type: 'submenu', submenu: Menu.buildFromTemplate(list.map(v => ({
+          label: v.match(/[^\\\/]*model\.json$/)[0],
+          click: () => {
+            mainWindow.webContents.send('changeModel', v)
+            config.model = v
+          }
+        })))},
+      {label: '退出', click: () => app.quit()},
     ]))
   }
   setContextMenu()

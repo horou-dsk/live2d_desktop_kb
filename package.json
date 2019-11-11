@@ -4,7 +4,7 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --dev",
+    "start": "electron .",
     "dist": "electron-builder"
   },
   "repository": "https://github.com/electron/electron-quick-start",
@@ -25,6 +25,6 @@
     "appId": "cqc.fuck",
     "icon": "ico/dango.ico",
     "productName": "団子",
-    "extraResources": "./live2d_models"
+    "extraResources": ["./live2d_models"]
   }
 }

@@ -2,12 +2,7 @@
 // It has the same sandbox as a Chrome extension.
 const electron = require('electron')
 const path = require('path')
-const app = electron.app || electron.remote.app;
-
-const isEnvSet = 'ELECTRON_IS_DEV' in process.env;
-const getFromEnv = parseInt(process.env.ELECTRON_IS_DEV, 10) === 1;
-
-const __DEV__ = isEnvSet ? getFromEnv : !app.isPackaged;
+const __DEV__ = require('./openv')
 
 window.addEventListener('DOMContentLoaded', () => {
   const replaceText = (selector, text) => {
@@ -16,6 +11,8 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   window.electron = electron
+  window.nodePath = path
+  window.__dirname = __dirname
   window.__DEV__ = __DEV__
 
   for (const type of ['chrome', 'node', 'electron']) {
