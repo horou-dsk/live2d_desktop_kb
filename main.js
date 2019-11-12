@@ -1,10 +1,11 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, screen, Tray, Menu} = require('electron')
+const {app, BrowserWindow, screen, Tray, Menu, powerMonitor} = require('electron')
 const path = require('path')
 const fs = require('fs')
 const __DEV__ = require('./openv')
 let config = require('./config')
-const configPath = './config.json'
+const docPath = path.join(app.getPath('documents'), '/Live2dDesktopKB')
+const configPath = path.join(docPath, '/config.json')
 
 
 function resolvePath(path) {
@@ -41,11 +42,14 @@ let mainWindow
 let tray
 
 function createWindow () {
-  // Create the browser window.
+
+  if(!fs.existsSync(docPath)) fs.mkdirSync(docPath)
   if(!__DEV__ && fs.existsSync(configPath)) {
     config = JSON.parse(fs.readFileSync(configPath).toString())
   }
   // config = new Proxy(config, {set: () => asyncConfig()})
+
+  // Create the browser window.
 
   mainWindow = new BrowserWindow({
     width: config.screenWidth,
@@ -96,6 +100,15 @@ function createWindow () {
     const [width, height] = mainWindow.getSize()
     config.screenWidth = width
     config.screenHeight = height
+  })
+
+  // windows 注销/关机 钩子事件
+  mainWindow.hookWindowMessage(22, () => {
+    asyncConfig()
+  })
+
+  powerMonitor.on('shutdown', () => {
+    asyncConfig()
   })
 
   const list = live2dModels(__DEV__ ? './live2d_models' : '../live2d_models')

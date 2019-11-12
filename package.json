@@ -22,7 +22,7 @@
     "electron-builder": "^22.1.0"
   },
   "build": {
-    "appId": "cqc.fuck",
+    "appId": "com.dango.live2desktop",
     "icon": "ico/dango.ico",
     "productName": "団子",
     "extraResources": ["./live2d_models"]
