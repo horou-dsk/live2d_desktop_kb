@@ -34,21 +34,25 @@ window.onload = () => {
       live2d_canvas.className = 'live2d'
     }
   })
+
+  function canvasResize() {
+    const [width, height] = remote.getCurrentWindow().getSize()
+    live2d_canvas.width = width
+    live2d_canvas.height = height
+  }
+  canvasResize()
+
   let timer
   window.addEventListener('resize', () => {
     clearTimeout(timer)
     timer = setTimeout(() => {
+      canvasResize()
       loadlive2d('live2d', model)
     }, 500)
   })
   let curMousePos = {}
   function dp() {
     const mousePos = remote.screen.getCursorScreenPoint()
-    const winSize = remote.getCurrentWindow().getSize()
-    if(winSize[0] !== live2d_canvas.width || live2d_canvas.height !== winSize[1]) {
-      live2d_canvas.width = winSize[0]
-      live2d_canvas.height = winSize[1]
-    }
     if(mousePos.x !== curMousePos.x || mousePos.y !== curMousePos.y) {
       curMousePos = mousePos
       const winPos = remote.getCurrentWindow().getPosition()
