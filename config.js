@@ -5,5 +5,6 @@ module.exports = {
   screenHeight: 360,
   alwaysOnTop: false,
   ignoreMouse: false,
+  clickTrigger: true,
   model: null
 }

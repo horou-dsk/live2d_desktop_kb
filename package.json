@@ -18,13 +18,33 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^7.0.1",
+    "electron": "^6.1.4",
     "electron-builder": "^22.1.0"
   },
   "build": {
     "appId": "com.dango.live2desktop",
     "icon": "ico/dango.ico",
     "productName": "団子",
-    "extraResources": ["./live2d_models"]
+    "extraResources": [
+      "./live2d_models"
+    ]
+  },
+  "dependencies": {
+    "iohook": "^0.6.1"
+  },
+  "iohook": {
+    "targets": [
+      "node-72",
+      "electron-73"
+    ],
+    "platforms": [
+      "win32",
+      "darwin",
+      "linux"
+    ],
+    "arches": [
+      "x64",
+      "ia32"
+    ]
   }
 }

@@ -17,7 +17,12 @@ window.onload = () => {
   const live2d_canvas = document.getElementById('live2d')
   const resize_box = document.getElementById('resize_box')
 
-  if(!window.electron) return
+  if(!window.electron) {
+    live2d_canvas.width = 240
+    live2d_canvas.height = 360
+    loadlive2d('live2d', './live2d_models/小埋/13.model.json')
+    return
+  }
   const {remote, dialog, ipcRenderer} = window.electron
 
   ipcRenderer.on('changeModel', (event, msg) => {

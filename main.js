@@ -1,11 +1,13 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, screen, Tray, Menu, powerMonitor} = require('electron')
+const {app, BrowserWindow, Tray, Menu} = require('electron')
 const path = require('path')
 const fs = require('fs')
+const iohook = require('iohook')
 const __DEV__ = require('./openv')
 let config = require('./config')
 const docPath = path.join(app.getPath('documents'), '/Live2dDesktopKB')
 const configPath = path.join(docPath, '/config.json')
+const live2dModelPath = path.join(docPath, '/live2d_models')
 
 
 function resolvePath(path) {
@@ -15,10 +17,10 @@ function resolvePath(path) {
 function live2dModels(dir) {
   const list = []
   const t = (p) => {
-    const dirList = fs.readdirSync(path.join(__dirname, p))
+    const dirList = fs.readdirSync(p)
     dirList.forEach(value => {
       const rpath = p + '/' + value
-      const abspath = path.join(__dirname, p, value)
+      const abspath = path.join(p, value)
       const stat = fs.statSync(abspath)
       if(stat.isFile() && /model\.json/.test(abspath)) {
         list.push(rpath)
@@ -42,8 +44,9 @@ let mainWindow
 let tray
 
 function createWindow () {
-
+  const {powerMonitor} = require('electron')
   if(!fs.existsSync(docPath)) fs.mkdirSync(docPath)
+  if(!fs.existsSync(live2dModelPath)) fs.mkdirSync(live2dModelPath)
   if(!__DEV__ && fs.existsSync(configPath)) {
     config = JSON.parse(fs.readFileSync(configPath).toString())
   }
@@ -84,6 +87,7 @@ function createWindow () {
     // when you should delete the corresponding element.
     mainWindow = null
     asyncConfig()
+    iohook.stop()
   })
 
   mainWindow.webContents.on('did-finish-load', () => {
@@ -102,6 +106,13 @@ function createWindow () {
     config.screenHeight = height
   })
 
+  iohook.on('mousedown', (event) => {
+    const [x, y] = mainWindow.getPosition()
+    mainWindow.webContents.sendInputEvent({type: 'mouseDown', x: event.x - x, y: event.y - y})
+  })
+
+  if(config.clickTrigger) iohook.start()
+
   // windows 注销/关机 钩子事件
   mainWindow.hookWindowMessage(22, () => {
     asyncConfig()
@@ -111,7 +122,7 @@ function createWindow () {
     asyncConfig()
   })
 
-  const list = live2dModels(__DEV__ ? './live2d_models' : '../live2d_models')
+  const list = live2dModels(path.join(__dirname, __DEV__ ? './live2d_models' : '../live2d_models')).concat(live2dModels(live2dModelPath))
   tray = new Tray(path.join(__dirname, 'ico/dango.ico'))
   tray.setToolTip('団子')
   let onTopFlag = config.alwaysOnTop, ignoreMouseEvent = config.ignoreMouse, resizable = false
@@ -127,6 +138,11 @@ function createWindow () {
           ignoreMouseEvent = !ignoreMouseEvent
           mainWindow.setIgnoreMouseEvents(ignoreMouseEvent)
           config.ignoreMouse = ignoreMouseEvent
+          setContextMenu()
+        }},
+      {label: config.clickTrigger ? '关闭鼠标事件捕获' : '开启鼠标事件捕获', click: () => {
+          config.clickTrigger = !config.clickTrigger
+          config.clickTrigger ? iohook.start() : iohook.stop()
           setContextMenu()
         }},
       {label: !resizable ? '调整窗口大小' : '关闭调整', click: () => {
