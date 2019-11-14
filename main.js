@@ -48,7 +48,7 @@ function createWindow () {
   if(!fs.existsSync(docPath)) fs.mkdirSync(docPath)
   if(!fs.existsSync(live2dModelPath)) fs.mkdirSync(live2dModelPath)
   if(!__DEV__ && fs.existsSync(configPath)) {
-    config = JSON.parse(fs.readFileSync(configPath).toString())
+    config = Object.assign(config, JSON.parse(fs.readFileSync(configPath).toString()))
   }
   // config = new Proxy(config, {set: () => asyncConfig()})
 
@@ -146,7 +146,8 @@ function createWindow () {
           setContextMenu()
         }},
       {label: !resizable ? '调整窗口大小' : '关闭调整', click: () => {
-          mainWindow.webContents.send('resizable', mainWindow.resizable = resizable = !resizable)
+          mainWindow.setResizable(resizable = !resizable)
+          mainWindow.webContents.send('resizable', resizable)
           setContextMenu()
         }},
       {label: '模型列表', type: 'submenu', submenu: Menu.buildFromTemplate(list.map(v => ({

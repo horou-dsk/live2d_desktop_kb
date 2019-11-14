@@ -20,7 +20,7 @@ window.onload = () => {
   if(!window.electron) {
     live2d_canvas.width = 240
     live2d_canvas.height = 360
-    loadlive2d('live2d', './live2d_models/小埋/13.model.json')
+    loadlive2d('live2d', './live2d_models/live2d-widget-model-haru/01/assets/haru01.model.json')
     return
   }
   const {remote, dialog, ipcRenderer} = window.electron
